@@ -37,7 +37,9 @@ app.use((req, res, next) => {
   if (cookieHeader) {
     cookieHeader.split(';').forEach(cookie => {
       const [name, value] = cookie.trim().split('=');
-      req.cookies[name] = value;
+      if (name && value !== undefined) {
+        req.cookies[name.trim()] = decodeURIComponent(value.trim());
+      }
     });
   }
   next();
@@ -69,6 +71,7 @@ app.use((req, res, next) => {
       // Store access code and username on request for use in routes
       req.accessCode = accessCode;
       req.username = req.cookies && req.cookies.username ? req.cookies.username : 'Anonymous';
+      console.log('Middleware: accessCode:', accessCode, 'username:', req.username, 'all cookies:', req.cookies);
       return next();
     }
   }
