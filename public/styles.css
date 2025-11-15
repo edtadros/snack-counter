@@ -1,0 +1,513 @@
+/* CSS Custom Properties for theming */
+:root {
+    --bg-gradient: linear-gradient(135deg, #ff6b6b, #ffa500);
+    --text-color: white;
+    --log-bg: rgba(255, 255, 255, 0.9);
+    --log-text: #333;
+    --delete-btn-bg: #ff4444;
+    --delete-btn-hover: #cc0000;
+    --pig-skin: #ff9999;
+    --pig-outline: #cc6666;
+    --pig-nose: #ff6666;
+    --pig-nose-border: #cc3333;
+}
+
+.dark-mode {
+    --bg-gradient: linear-gradient(135deg, #2c1810, #1a1a2e);
+    --text-color: #e0e0e0;
+    --log-bg: rgba(30, 30, 30, 0.9);
+    --log-text: #e0e0e0;
+    --delete-btn-bg: #ff6b6b;
+    --delete-btn-hover: #ff9999;
+}
+
+/* Mobile-first responsive design */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Noto Sans', sans-serif;
+    background: var(--bg-gradient);
+    min-height: 100vh;
+    color: var(--text-color);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+.container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 40px 30px;
+    text-align: center;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+h1 {
+    font-size: 2rem;
+    margin: 0;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.dark-mode-toggle {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid var(--text-color);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-color);
+    outline: none;
+}
+
+.dark-mode-toggle:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+h2 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+/* Pig Styles */
+.pig-container {
+    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+}
+
+.pig {
+    transition: transform 0.3s ease;
+}
+
+.pig-body {
+    position: relative;
+    width: 80px;
+    height: 100px;
+}
+
+.pig-head {
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 60px;
+    background: var(--pig-skin);
+    border-radius: 50% 50% 40% 40%;
+    border: 3px solid var(--pig-outline);
+}
+
+.ear {
+    position: absolute;
+    top: -10px;
+    width: 20px;
+    height: 25px;
+    background: var(--pig-skin);
+    border: 2px solid var(--pig-outline);
+    border-radius: 50% 50% 0 0;
+}
+
+.left-ear {
+    left: 10px;
+    transform: rotate(-20deg);
+}
+
+.right-ear {
+    right: 10px;
+    transform: rotate(20deg);
+}
+
+.eye {
+    position: absolute;
+    top: 15px;
+    width: 8px;
+    height: 8px;
+    background: black;
+    border-radius: 50%;
+}
+
+.left-eye {
+    left: 20px;
+}
+
+.right-eye {
+    right: 20px;
+}
+
+.nose {
+    position: absolute;
+    top: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 15px;
+    height: 8px;
+    background: var(--pig-nose);
+    border-radius: 50%;
+    border: 1px solid var(--pig-nose-border);
+}
+
+.nose::before,
+.nose::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    width: 3px;
+    height: 3px;
+    background: black;
+    border-radius: 50%;
+}
+
+.nose::before {
+    left: 3px;
+}
+
+.nose::after {
+    right: 3px;
+}
+
+.mouth {
+    position: absolute;
+    top: 35px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 5px;
+    border: 2px solid var(--pig-nose-border);
+    border-top: none;
+    border-radius: 0 0 50% 50%;
+}
+
+.pig-torso {
+    width: 100%;
+    height: 100%;
+    background: var(--pig-skin);
+    border-radius: 50%;
+    border: 3px solid var(--pig-outline);
+    position: relative;
+}
+
+.leg {
+    position: absolute;
+    bottom: -15px;
+    width: 15px;
+    height: 20px;
+    background: var(--pig-skin);
+    border: 2px solid var(--pig-outline);
+    border-radius: 50% 50% 20% 20%;
+}
+
+.front-left {
+    left: 25px;
+}
+
+.front-right {
+    left: 45px;
+}
+
+.back-left {
+    right: 45px;
+}
+
+.back-right {
+    right: 25px;
+}
+
+.tail {
+    position: absolute;
+    top: 20px;
+    right: -10px;
+    width: 15px;
+    height: 8px;
+    background: var(--pig-skin);
+    border: 2px solid var(--pig-outline);
+    border-radius: 50%;
+    transform: rotate(45deg);
+}
+
+.tail::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 4px;
+    background: var(--pig-nose);
+    border-radius: 50%;
+}
+
+/* Counter Display */
+.counter-display {
+    margin: 30px 0;
+}
+
+.count {
+    font-size: 4rem;
+    font-weight: bold;
+    text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+    margin-bottom: 10px;
+}
+
+.label {
+    font-size: 1.2rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+/* Increment Button */
+.increment-btn {
+    width: 120px;
+    height: 120px;
+    border-radius: 15px;
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    border: 4px solid #2E7D32;
+    color: white;
+    font-size: 4rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    margin: 20px auto;
+    outline: none;
+    display: block;
+}
+
+.increment-btn:hover {
+    background: linear-gradient(135deg, #45a049, #4CAF50);
+    transform: scale(1.05);
+}
+
+.increment-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.increment-btn:disabled {
+    background: linear-gradient(135deg, #666, #555) !important;
+    border-color: #444 !important;
+    color: #999 !important;
+    cursor: not-allowed !important;
+    opacity: 0.6 !important;
+}
+
+
+/* Log Container */
+.log-container {
+    flex: 1;
+    margin-top: 30px;
+}
+
+.log {
+    background: var(--log-bg);
+    border-radius: 15px;
+    padding: 15px;
+    max-height: 300px;
+    overflow-y: auto;
+    color: var(--log-text);
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 0.9rem;
+    text-align: left;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.log-entry {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.log-entry:last-child {
+    border-bottom: none;
+}
+
+.log-text {
+    flex: 1;
+}
+
+.delete-btn {
+    background: var(--delete-btn-bg);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-left: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.delete-btn:hover {
+    background: var(--delete-btn-hover);
+}
+
+/* Pig fattening animation */
+.pig.fat {
+    animation: fatten 0.5s ease-out;
+}
+
+@keyframes fatten {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1.05); }
+}
+
+/* Flying Pig */
+.flying-pig {
+    position: absolute;
+    width: 40px;
+    height: 30px;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.flying-pig .pig-body {
+    width: 40px;
+    height: 25px;
+}
+
+.flying-pig .pig-head {
+    width: 25px;
+    height: 18px;
+    top: -12px;
+}
+
+.flying-pig .ear {
+    width: 6px;
+    height: 8px;
+    top: -3px;
+}
+
+.flying-pig .eye {
+    width: 3px;
+    height: 3px;
+    top: 5px;
+}
+
+.flying-pig .left-eye {
+    left: 6px;
+}
+
+.flying-pig .right-eye {
+    right: 6px;
+}
+
+.flying-pig .nose {
+    width: 5px;
+    height: 3px;
+    top: 8px;
+}
+
+.flying-pig .nose::before,
+.flying-pig .nose::after {
+    width: 1px;
+    height: 1px;
+    top: 1px;
+}
+
+.flying-pig .nose::before {
+    left: 1px;
+}
+
+.flying-pig .nose::after {
+    right: 1px;
+}
+
+.flying-pig .mouth {
+    width: 3px;
+    height: 2px;
+    top: 11px;
+}
+
+.flying-pig .pig-torso {
+    border-radius: 50%;
+}
+
+.flying-pig .leg {
+    width: 5px;
+    height: 7px;
+    bottom: -5px;
+}
+
+.flying-pig .front-left {
+    left: 8px;
+}
+
+.flying-pig .front-right {
+    left: 15px;
+}
+
+.flying-pig .back-left {
+    right: 15px;
+}
+
+.flying-pig .back-right {
+    right: 8px;
+}
+
+.flying-pig .tail {
+    width: 5px;
+    height: 3px;
+    top: 6px;
+    right: -3px;
+}
+
+.flying-pig .tail::before {
+    width: 3px;
+    height: 2px;
+}
+
+
+/* Mobile optimizations */
+@media (max-width: 480px) {
+    .container {
+        padding: 30px 20px;
+    }
+
+    h1 {
+        font-size: 1.8rem;
+    }
+
+    .count {
+        font-size: 3.5rem;
+    }
+
+    .increment-btn {
+        width: 100px;
+        height: 100px;
+        font-size: 3rem;
+    }
+
+    .flying-pig {
+        width: 30px;
+        height: 22px;
+    }
+
+    .flying-pig .pig-body {
+        width: 30px;
+        height: 18px;
+    }
+}

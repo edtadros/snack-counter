@@ -1,0 +1,16 @@
+{
+  "name": "snack-counter",
+  "version": "1.0.0",
+  "description": "Snack Counter - A fun counter app for local network access",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "keywords": ["counter", "local-network", "mobile"],
+  "author": "",
+  "license": "MIT"
+}

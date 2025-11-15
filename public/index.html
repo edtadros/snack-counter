@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snack Counter</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Flying Pig -->
+    <div class="flying-pig" id="flyingPig">
+        <div class="pig-body">
+            <div class="pig-head">
+                <div class="ear left-ear"></div>
+                <div class="ear right-ear"></div>
+                <div class="eye left-eye"></div>
+                <div class="eye right-eye"></div>
+                <div class="nose"></div>
+                <div class="mouth"></div>
+            </div>
+            <div class="pig-torso"></div>
+            <div class="leg front-left"></div>
+            <div class="leg front-right"></div>
+            <div class="leg back-left"></div>
+            <div class="leg back-right"></div>
+            <div class="tail"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>Snack Counter</h1>
+            <button class="dark-mode-toggle" id="darkModeToggle">🌙</button>
+        </div>
+
+        <div class="pig-container">
+            <div class="pig" id="pig">
+                <div class="pig-body">
+                    <div class="pig-head">
+                        <div class="ear left-ear"></div>
+                        <div class="ear right-ear"></div>
+                        <div class="eye left-eye"></div>
+                        <div class="eye right-eye"></div>
+                        <div class="nose"></div>
+                        <div class="mouth"></div>
+                    </div>
+                    <div class="pig-torso"></div>
+                    <div class="leg front-left"></div>
+                    <div class="leg front-right"></div>
+                    <div class="leg back-left"></div>
+                    <div class="leg back-right"></div>
+                    <div class="tail"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="counter-display">
+            <div class="count" id="count">0</div>
+            <div class="label">Snacks Eaten</div>
+        </div>
+
+        <button class="increment-btn" id="incrementBtn">+</button>
+
+        <div class="log-container">
+            <h2>Snack Log</h2>
+            <div class="log" id="log">
+                <div class="log-entry"><span class="log-text">Welcome to the Snack Counter!</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
