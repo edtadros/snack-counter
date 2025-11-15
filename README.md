@@ -16,6 +16,7 @@ A fun, mobile-optimized snack counter app with flying pigs and deletion capabili
 - **Persistent Settings**: Dark mode preference saved locally
 - **Rate Limiting**: Global 20-second cooldown prevents spam - button disables for ALL users when pressed
 - **Data Persistence**: Automatic saving to JSON with backup system - survives server restarts and software updates
+- **Access Control**: Password-protected access with cookie-based authentication - only authorized users can access
 
 ## Recent Updates
 
@@ -56,6 +57,7 @@ A fun, mobile-optimized snack counter app with flying pigs and deletion capabili
 - Toggle between light 🌙 and dark ☀️ modes using the button in the top-right
 - View the snack log at the bottom
 - Delete any mistaken entries by tapping the red × button next to them
+- **Security**: Log out anytime using the 🚪 button in the top-right
 
 ## Technical Details
 
@@ -81,6 +83,28 @@ Your snack data is automatically saved and will survive:
 **Backup & Restore:**
 - Data is automatically backed up to `counter-data.json.backup`
 - API endpoints available for programmatic backup/restore if needed
+
+## Security & Access Control
+
+**Password Protection:**
+- Set the `ACCESS_PASSWORD` environment variable on your server
+- Users must enter the correct password to access the counter
+- Default password: `snacks2025` (change this!)
+
+**Access Methods:**
+1. **Direct URL**: `https://your-app.render.com/?access=YOUR_PASSWORD`
+2. **Login Form**: Visit the URL and enter password when prompted
+3. **Cookie Authentication**: Stays logged in for 24 hours
+
+**Environment Variables:**
+- `ACCESS_PASSWORD`: Set your custom access code
+- `NODE_ENV`: Set to `production` for deployment
+
+**Security Features:**
+- HTTP-only cookies prevent XSS attacks
+- Password is never stored in client-side code
+- All routes protected except API endpoints
+- Automatic logout after 24 hours
 
 ## API Endpoints
 
