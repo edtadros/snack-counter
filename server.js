@@ -3,11 +3,102 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'counter-data.json');
+
+// Simple access control
+const ACCESS_PASSWORD = process.env.ACCESS_PASSWORD || 'snacks2025'; // Change this!
 
 // Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Simple cookie parser (basic implementation)
+app.use((req, res, next) => {
+  req.cookies = {};
+  const cookieHeader = req.headers.cookie;
+  if (cookieHeader) {
+    cookieHeader.split(';').forEach(cookie => {
+      const [name, value] = cookie.trim().split('=');
+      req.cookies[name] = value;
+    });
+  }
+  next();
+});
+
+// Access control middleware
+app.use((req, res, next) => {
+  // Allow API calls and static assets
+  if (req.path.startsWith('/api/') ||
+      req.path.includes('.css') ||
+      req.path.includes('.js') ||
+      req.path === '/login' ||
+      req.method === 'POST' && req.path === '/') {
+    return next();
+  }
+
+  // Check if user is authenticated via session
+  if (req.session && req.session.authenticated) {
+    return next();
+  }
+
+  // Check for access code in URL parameter
+  if (req.query.access === ACCESS_PASSWORD) {
+    // Set a simple session-like cookie
+    res.cookie('authenticated', 'true', {
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      httpOnly: true,
+      secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
+    });
+    return next();
+  }
+
+  // Check for authentication cookie
+  if (req.cookies && req.cookies.authenticated === 'true') {
+    return next();
+  }
+
+  // If accessing root, show login page
+  if (req.path === '/') {
+    return res.redirect('/login');
+  }
+
+  // For other routes, redirect to login
+  res.redirect('/login');
+});
+
+// Serve login page
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// Handle login form submission
+app.post('/login', (req, res) => {
+  const { password } = req.body;
+
+  if (password === ACCESS_PASSWORD) {
+    // Set authentication cookie
+    res.cookie('authenticated', 'true', {
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      httpOnly: true,
+      secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
+    });
+    res.redirect('/');
+  } else {
+    // Serve login page with error
+    const loginPage = fs.readFileSync(path.join(__dirname, 'public', 'login.html'), 'utf8')
+      .replace('<div class="error" id="error-message" style="display: none;">Invalid access code. Please try again.</div>',
+               '<div class="error" id="error-message">Invalid access code. Please try again.</div>');
+    res.send(loginPage);
+  }
+});
+
+// Logout route
+app.post('/logout', (req, res) => {
+  res.clearCookie('authenticated');
+  res.redirect('/login');
+});
+
 app.use(express.static('public'));
 
 // Initialize data file if it doesn't exist

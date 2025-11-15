@@ -57,13 +57,19 @@ body {
     margin-bottom: 30px;
 }
 
+.header-buttons {
+    display: flex;
+    gap: 10px;
+}
+
 h1 {
     font-size: 2rem;
     margin: 0;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
-.dark-mode-toggle {
+.dark-mode-toggle,
+.logout-btn {
     background: rgba(255, 255, 255, 0.2);
     border: 2px solid var(--text-color);
     border-radius: 50%;
@@ -76,7 +82,8 @@ h1 {
     outline: none;
 }
 
-.dark-mode-toggle:hover {
+.dark-mode-toggle:hover,
+.logout-btn:hover {
     background: rgba(255, 255, 255, 0.3);
     transform: scale(1.1);
 }

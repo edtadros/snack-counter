@@ -5,6 +5,7 @@ const logContainer = document.getElementById('log');
 const pig = document.getElementById('pig');
 const flyingPig = document.getElementById('flyingPig');
 const darkModeToggle = document.getElementById('darkModeToggle');
+const logoutBtn = document.getElementById('logoutBtn');
 
 // State
 let currentCount = 0;
@@ -269,6 +270,7 @@ function startFlyingPig() {
 // Event listeners
 incrementBtn.addEventListener('click', incrementCounter);
 darkModeToggle.addEventListener('click', toggleDarkMode);
+logoutBtn.addEventListener('click', logout);
 
 // Touch events for mobile
 incrementBtn.addEventListener('touchstart', (e) => {
@@ -288,6 +290,18 @@ function toggleDarkMode() {
     document.body.classList.toggle('dark-mode', isDarkMode);
     darkModeToggle.textContent = isDarkMode ? '☀️' : '🌙';
     localStorage.setItem('darkMode', isDarkMode);
+}
+
+// Logout function
+function logout() {
+    if (confirm('Are you sure you want to log out?')) {
+        // Create a form to POST to logout endpoint
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/logout';
+        document.body.appendChild(form);
+        form.submit();
+    }
 }
 
 // Initialize dark mode from localStorage
