@@ -5,10 +5,13 @@ const webpush = require('web-push');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DATA_FILE = path.join(__dirname, 'counter-data.json');
 
-// Simple access control
-const ACCESS_PASSWORD = process.env.ACCESS_PASSWORD || 'snacks2025'; // Change this!
+// Multi-room access control (each access code creates its own counter)
+function getDataFile(accessCode) {
+  // Sanitize access code for filename
+  const sanitizedCode = accessCode.replace(/[^a-zA-Z0-9-_]/g, '_');
+  return path.join(__dirname, `counter-data-${sanitizedCode}.json`);
+}
 
 // Web Push Configuration
 const vapidKeys = {
@@ -51,25 +54,23 @@ app.use((req, res, next) => {
     return next();
   }
 
-  // Check if user is authenticated via session
-  if (req.session && req.session.authenticated) {
-    return next();
-  }
+  // Check for access code in URL parameter or cookie
+  let accessCode = req.query.access || (req.cookies && req.cookies.accessCode);
 
-  // Check for access code in URL parameter
-  if (req.query.access === ACCESS_PASSWORD) {
-    // Set a simple session-like cookie
-    res.cookie('authenticated', 'true', {
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      httpOnly: true,
-      secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
-    });
-    return next();
-  }
-
-  // Check for authentication cookie
-  if (req.cookies && req.cookies.authenticated === 'true') {
-    return next();
+  if (accessCode) {
+    // Validate access code (alphanumeric, underscore, dash only)
+    if (/^[a-zA-Z0-9_-]+$/.test(accessCode)) {
+      // Set access code cookie for future requests
+      res.cookie('accessCode', accessCode, {
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        httpOnly: true,
+        secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
+      });
+      // Store access code and username on request for use in routes
+      req.accessCode = accessCode;
+      req.username = req.cookies && req.cookies.username ? req.cookies.username : 'Anonymous';
+      return next();
+    }
   }
 
   // If accessing root, show login page
@@ -88,28 +89,47 @@ app.get('/login', (req, res) => {
 
 // Handle login form submission
 app.post('/login', (req, res) => {
-  const { password } = req.body;
+  const { password: accessCode, username } = req.body;
 
-  if (password === ACCESS_PASSWORD) {
-    // Set authentication cookie
-    res.cookie('authenticated', 'true', {
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      httpOnly: true,
-      secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
-    });
-    res.redirect('/');
-  } else {
-    // Serve login page with error
+  // Validate access code format
+  if (!accessCode || !/^[a-zA-Z0-9_-]+$/.test(accessCode)) {
     const loginPage = fs.readFileSync(path.join(__dirname, 'public', 'login.html'), 'utf8')
       .replace('<div class="error" id="error-message" style="display: none;">Invalid access code. Please try again.</div>',
-               '<div class="error" id="error-message">Invalid access code. Please try again.</div>');
-    res.send(loginPage);
+               '<div class="error" id="error-message">Invalid access code format. Use only letters, numbers, underscores, and dashes.</div>');
+    return res.send(loginPage);
   }
+
+  // Validate username
+  if (!username || username.trim().length === 0) {
+    const loginPage = fs.readFileSync(path.join(__dirname, 'public', 'login.html'), 'utf8')
+      .replace('<div class="error" id="error-message" style="display: none;">Invalid access code. Please try again.</div>',
+               '<div class="error" id="error-message">Please enter your name.</div>');
+    return res.send(loginPage);
+  }
+
+  // Sanitize username (remove potentially harmful characters)
+  const cleanUsername = username.trim().substring(0, 50).replace(/[<>\"'&]/g, '');
+
+  // Set cookies and redirect
+  res.cookie('accessCode', accessCode, {
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    httpOnly: true,
+    secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
+  });
+
+  res.cookie('username', cleanUsername, {
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    httpOnly: true,
+    secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
+  });
+
+  res.redirect(`/?access=${accessCode}`);
 });
 
 // Logout route
 app.post('/logout', (req, res) => {
-  res.clearCookie('authenticated');
+  res.clearCookie('accessCode');
+  res.clearCookie('username');
   res.redirect('/login');
 });
 
@@ -127,20 +147,22 @@ if (!fs.existsSync(DATA_FILE)) {
 }
 
 // Helper function to read data with integrity checks
-function readData() {
+function readData(accessCode) {
+  const dataFile = getDataFile(accessCode);
+
   try {
-    if (!fs.existsSync(DATA_FILE)) {
-      console.log('Data file does not exist, initializing...');
-      return initializeData();
+    if (!fs.existsSync(dataFile)) {
+      console.log(`Data file for ${accessCode} does not exist, initializing...`);
+      return initializeData(accessCode);
     }
 
-    const data = fs.readFileSync(DATA_FILE, 'utf8');
+    const data = fs.readFileSync(dataFile, 'utf8');
     const parsed = JSON.parse(data);
 
     // Validate data structure
     if (!parsed || typeof parsed !== 'object') {
       console.error('Invalid data structure, reinitializing...');
-      return initializeData();
+      return initializeData(accessCode);
     }
 
     // Ensure required fields exist
@@ -148,13 +170,14 @@ function readData() {
     if (!Array.isArray(parsed.log)) parsed.log = [];
     if (typeof parsed.lastIncrementTime !== 'number') parsed.lastIncrementTime = 0;
     if (!Array.isArray(parsed.pushSubscriptions)) parsed.pushSubscriptions = [];
+    if (typeof parsed.accessCode !== 'string') parsed.accessCode = accessCode;
 
     return parsed;
   } catch (error) {
     console.error('Error reading data file, attempting recovery:', error);
 
     // Try to restore from backup
-    const backupData = tryRestoreFromBackup();
+    const backupData = tryRestoreFromBackup(accessCode);
     if (backupData) {
       console.log('Restored from backup successfully');
       return backupData;
@@ -162,24 +185,27 @@ function readData() {
 
     // If all else fails, initialize fresh
     console.log('Initializing fresh data...');
-    return initializeData();
+    return initializeData(accessCode);
   }
 }
 
-// Initialize fresh data
-function initializeData() {
+// Initialize fresh data for a specific access code
+function initializeData(accessCode) {
   const initialData = {
+    accessCode: accessCode,
     count: 0,
     log: [],
-    lastIncrementTime: 0
+    lastIncrementTime: 0,
+    pushSubscriptions: []
   };
-  writeData(initialData);
+  writeData(accessCode, initialData);
   return initialData;
 }
 
-// Try to restore from backup
-function tryRestoreFromBackup() {
-  const backupFile = DATA_FILE + '.backup';
+// Try to restore from backup for a specific access code
+function tryRestoreFromBackup(accessCode) {
+  const dataFile = getDataFile(accessCode);
+  const backupFile = dataFile + '.backup';
   try {
     if (fs.existsSync(backupFile)) {
       const backupData = fs.readFileSync(backupFile, 'utf8');
@@ -191,10 +217,11 @@ function tryRestoreFromBackup() {
   return null;
 }
 
-// Atomic write with backup
-function writeData(data) {
-  const tempFile = DATA_FILE + '.tmp';
-  const backupFile = DATA_FILE + '.backup';
+// Atomic write with backup for a specific access code
+function writeData(accessCode, data) {
+  const dataFile = getDataFile(accessCode);
+  const tempFile = dataFile + '.tmp';
+  const backupFile = dataFile + '.backup';
 
   try {
     // Validate data before writing
@@ -203,17 +230,17 @@ function writeData(data) {
     }
 
     // Create backup of current data if it exists
-    if (fs.existsSync(DATA_FILE)) {
-      fs.copyFileSync(DATA_FILE, backupFile);
+    if (fs.existsSync(dataFile)) {
+      fs.copyFileSync(dataFile, backupFile);
     }
 
     // Write to temporary file first (atomic operation)
     fs.writeFileSync(tempFile, JSON.stringify(data, null, 2));
 
     // Atomic rename (this is atomic on POSIX systems)
-    fs.renameSync(tempFile, DATA_FILE);
+    fs.renameSync(tempFile, dataFile);
 
-    console.log(`Data saved successfully: ${data.count} snacks, ${data.log.length} log entries`);
+    console.log(`Data saved for ${accessCode}: ${data.count} snacks, ${data.log.length} log entries`);
   } catch (error) {
     console.error('Error writing data file:', error);
 
@@ -232,12 +259,12 @@ function writeData(data) {
 
 // API Routes
 app.get('/api/counter', (req, res) => {
-  const data = readData();
+  const data = readData(req.accessCode);
   res.json(data);
 });
 
 app.get('/api/button-state', (req, res) => {
-  const data = readData();
+  const data = readData(req.accessCode);
   const now = Date.now();
   const timeSinceLastIncrement = now - data.lastIncrementTime;
   const RATE_LIMIT_MS = 20000; // 20 seconds
@@ -377,7 +404,8 @@ app.post('/api/increment', (req, res) => {
   data.log.unshift({
     id: id,
     timestamp: timestamp,
-    count: data.count
+    count: data.count,
+    username: req.username || 'Anonymous'
   });
 
   // Keep only last 20 entries in log

@@ -6,6 +6,7 @@ const pig = document.getElementById('pig');
 const flyingPig = document.getElementById('flyingPig');
 const darkModeToggle = document.getElementById('darkModeToggle');
 const logoutBtn = document.getElementById('logoutBtn');
+const currentUserDisplay = document.getElementById('currentUser');
 
 // State
 let currentCount = 0;
@@ -175,7 +176,8 @@ function updateDisplay() {
 
             const logText = document.createElement('span');
             logText.className = 'log-text';
-            logText.textContent = `${entry.timestamp} - Snack #${entry.count}`;
+            const username = entry.username || 'Anonymous';
+            logText.textContent = `${entry.timestamp} - ${username} ate Snack #${entry.count}`;
 
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'delete-btn';
@@ -315,6 +317,23 @@ function initDarkMode() {
     }
 }
 
+// Get username from cookies and display it
+function initUserDisplay() {
+    // Try to get username from document.cookie (client-side cookies)
+    const cookies = document.cookie.split(';');
+    let username = 'Guest';
+
+    for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'username') {
+            username = decodeURIComponent(value);
+            break;
+        }
+    }
+
+    currentUserDisplay.textContent = username;
+}
+
 // Push notification functions
 async function initPushNotifications() {
     if ('serviceWorker' in navigator && 'PushManager' in window) {
@@ -397,6 +416,7 @@ function urlBase64ToUint8Array(base64String) {
 document.addEventListener('DOMContentLoaded', () => {
     init();
     initDarkMode();
+    initUserDisplay(); // Display current user
     startFlyingPig();
     checkButtonState(); // Check initial button state
     initPushNotifications(); // Initialize push notifications
