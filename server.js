@@ -45,46 +45,43 @@ app.use((req, res, next) => {
   next();
 });
 
+// Extract access code and username for ALL requests (including API)
+app.use((req, res, next) => {
+  // Get access code from query parameter or cookie
+  let accessCode = req.query.access || req.cookies.accessCode;
+
+  if (accessCode) {
+    // Sanitize access code for consistency
+    const sanitizedCode = accessCode.replace(/[^a-zA-Z0-9-_]/g, '_');
+    req.accessCode = sanitizedCode;
+  }
+
+  // Get username from cookie - decode it properly
+  req.username = req.cookies.username ? decodeURIComponent(req.cookies.username) : 'Anonymous';
+  
+  console.log('🔧 Extract Middleware - Path:', req.path, 'accessCode:', req.accessCode, 'username:', req.username, 'cookies:', req.cookies);
+
+  next();
+});
+
 // Access control middleware
 app.use((req, res, next) => {
-  // Allow API calls and static assets
+  // Allow API calls and static assets (they already have accessCode and username from previous middleware)
   if (req.path.startsWith('/api/') ||
       req.path.includes('.css') ||
       req.path.includes('.js') ||
       req.path === '/login' ||
-      req.method === 'POST' && req.path === '/') {
+      req.method === 'POST' && req.path === '/login') {
     return next();
   }
 
-  // Check for access code in URL parameter or cookie
-  let accessCode = req.query.access || (req.cookies && req.cookies.accessCode);
-
-  console.log('Middleware check - Path:', req.path, 'Query access:', req.query.access, 'Cookie accessCode:', req.cookies?.accessCode);
-
-  if (accessCode) {
-    // Sanitize access code for consistency
-    const sanitizedCode = accessCode.replace(/[^a-zA-Z0-9_-]/g, '_');
-    console.log('Original accessCode:', accessCode, 'Sanitized:', sanitizedCode);
-
-    // Validate sanitized access code (alphanumeric, underscore, dash only)
-    if (/^[a-zA-Z0-9_-]+$/.test(sanitizedCode)) {
-      // Set access code cookie for future requests (always set it to ensure consistency)
-      res.cookie('accessCode', sanitizedCode, {
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        httpOnly: true,
-        secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
-      });
-      // Store sanitized access code on request for use in routes
-      req.accessCode = sanitizedCode;
-      req.username = req.cookies && req.cookies.username ? decodeURIComponent(req.cookies.username) : 'Anonymous';
-      console.log('✅ Middleware: accessCode set to:', req.accessCode, 'username:', req.username);
-      return next();
-    } else {
-      console.log('❌ Invalid access code format:', sanitizedCode);
-    }
-  } else {
-    console.log('❌ No access code found in query or cookie');
+  // Check if user has valid access code (set by previous middleware)
+  if (req.accessCode && /^[a-zA-Z0-9_-]+$/.test(req.accessCode)) {
+    console.log('✅ Access granted - Path:', req.path, 'accessCode:', req.accessCode, 'username:', req.username);
+    return next();
   }
+
+  console.log('❌ Access denied - Path:', req.path, 'no valid accessCode');
 
   // If accessing root, show login page
   if (req.path === '/') {
