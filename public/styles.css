@@ -6,10 +6,10 @@
     --log-text: #e0e0e0;
     --delete-btn-bg: #ff6b6b;
     --delete-btn-hover: #ff9999;
-    --pig-skin: #8b4513;
-    --pig-outline: #654321;
-    --pig-nose: #a0522d;
-    --pig-nose-border: #8b4513;
+    --pig-skin: #ff9999;
+    --pig-outline: #cc6666;
+    --pig-nose: #ff6666;
+    --pig-nose-border: #cc3333;
 }
 
 .light-mode {
@@ -19,10 +19,6 @@
     --log-text: #333;
     --delete-btn-bg: #ff4444;
     --delete-btn-hover: #cc0000;
-    --pig-skin: #ff9999;
-    --pig-outline: #cc6666;
-    --pig-nose: #ff6666;
-    --pig-nose-border: #cc3333;
 }
 
 /* Mobile-first responsive design */
