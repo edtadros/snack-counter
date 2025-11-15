@@ -61,6 +61,7 @@
             font-size: 1.1rem;
         }
 
+        input[type="text"],
         input[type="password"] {
             width: 100%;
             padding: 15px;
@@ -73,10 +74,12 @@
             transition: all 0.3s ease;
         }
 
+        input[type="text"]::placeholder,
         input[type="password"]::placeholder {
             color: rgba(255, 255, 255, 0.7);
         }
 
+        input[type="text"]:focus,
         input[type="password"]:focus {
             border-color: white;
             background: rgba(255, 255, 255, 0.2);
