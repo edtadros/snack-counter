@@ -8,6 +8,11 @@ const PORT = process.env.PORT || 3000;
 
 // Multi-room access control (each access code creates its own counter)
 function getDataFile(accessCode) {
+  // Handle undefined or null accessCode
+  if (!accessCode) {
+    console.error('⚠️ getDataFile called with undefined accessCode');
+    return path.join(__dirname, 'counter-data-default.json');
+  }
   // Sanitize access code for filename
   const sanitizedCode = accessCode.replace(/[^a-zA-Z0-9-_]/g, '_');
   return path.join(__dirname, `counter-data-${sanitizedCode}.json`);
@@ -258,14 +263,22 @@ function writeData(accessCode, data) {
   }
 }
 
-// API Routes
+// API Routes - Require valid accessCode
 app.get('/api/counter', (req, res) => {
+  if (!req.accessCode) {
+    console.error('❌ API /counter - No accessCode!');
+    return res.status(400).json({ error: 'No access code provided' });
+  }
   console.log('API /counter - accessCode:', req.accessCode);
   const data = readData(req.accessCode);
   res.json(data);
 });
 
 app.get('/api/button-state', (req, res) => {
+  if (!req.accessCode) {
+    console.error('❌ API /button-state - No accessCode!');
+    return res.status(400).json({ error: 'No access code provided' });
+  }
   const data = readData(req.accessCode);
   const now = Date.now();
   const timeSinceLastIncrement = now - data.lastIncrementTime;
@@ -309,7 +322,7 @@ app.post('/api/subscribe', (req, res) => {
     data.pushSubscriptions = data.pushSubscriptions.slice(-50);
   }
 
-  writeData(data);
+  writeData(req.accessCode, data);
   res.status(201).json({ message: 'Subscription added successfully' });
 });
 
@@ -388,7 +401,12 @@ app.post('/api/import-data', (req, res) => {
 });
 
 app.post('/api/increment', (req, res) => {
-  const data = readData();
+  if (!req.accessCode) {
+    console.error('❌ API /increment - No accessCode!');
+    return res.status(400).json({ error: 'No access code provided' });
+  }
+  
+  const data = readData(req.accessCode);
   const now = Date.now();
   const timeSinceLastIncrement = now - data.lastIncrementTime;
   const RATE_LIMIT_MS = 20000; // 20 seconds
@@ -424,7 +442,7 @@ app.post('/api/increment', (req, res) => {
     data.log = data.log.slice(0, 20);
   }
 
-  writeData(data);
+  writeData(req.accessCode, data);
 
   // Send push notifications asynchronously (don't wait for it)
   sendPushNotifications(req.accessCode, `Snack #${data.count} has been eaten! 🐷`, 'Snack Counter')
@@ -456,7 +474,7 @@ app.delete('/api/log/:id', (req, res) => {
       data.lastIncrementTime = 0;
     }
 
-    writeData(data);
+    writeData(req.accessCode, data);
     res.json(data);
   } else {
     res.status(404).json({ error: 'Log entry not found' });
