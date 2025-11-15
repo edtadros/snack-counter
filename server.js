@@ -452,8 +452,15 @@ app.post('/api/increment', (req, res) => {
 });
 
 app.delete('/api/log/:id', (req, res) => {
-  const data = readData();
+  if (!req.accessCode) {
+    console.error('❌ API /log DELETE - No accessCode!');
+    return res.status(400).json({ error: 'No access code provided' });
+  }
+  
+  const data = readData(req.accessCode);
   const logId = req.params.id;
+  
+  console.log('🗑️ DELETE LOG - accessCode:', req.accessCode, 'logId:', logId, 'current log length:', data.log.length);
 
   // Find the log entry to delete
   const logIndex = data.log.findIndex(entry => entry.id === logId);
@@ -475,8 +482,10 @@ app.delete('/api/log/:id', (req, res) => {
     }
 
     writeData(req.accessCode, data);
+    console.log('✅ DELETED - new count:', data.count, 'new log length:', data.log.length);
     res.json(data);
   } else {
+    console.log('❌ Log entry not found:', logId);
     res.status(404).json({ error: 'Log entry not found' });
   }
 });
