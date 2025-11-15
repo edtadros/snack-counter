@@ -363,7 +363,11 @@ function removeInvalidSubscription(accessCode, endpoint) {
 // Data export endpoint for backups
 app.get('/api/export-data', (req, res) => {
   try {
-    const data = readData();
+    if (!req.accessCode) {
+      console.error('❌ API /export-data - No accessCode!');
+      return res.status(400).json({ error: 'No access code provided' });
+    }
+    const data = readData(req.accessCode);
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Content-Disposition', 'attachment; filename="snack-counter-data.json"');
     res.json(data);
@@ -375,6 +379,11 @@ app.get('/api/export-data', (req, res) => {
 // Data import endpoint for restores
 app.post('/api/import-data', (req, res) => {
   try {
+    if (!req.accessCode) {
+      console.error('❌ API /import-data - No accessCode!');
+      return res.status(400).json({ error: 'No access code provided' });
+    }
+    
     const importedData = req.body;
 
     // Validate imported data structure
@@ -388,7 +397,7 @@ app.post('/api/import-data', (req, res) => {
     if (typeof importedData.lastIncrementTime !== 'number') importedData.lastIncrementTime = 0;
 
     // Save the imported data
-    writeData(importedData);
+    writeData(req.accessCode, importedData);
 
     res.json({
       success: true,
