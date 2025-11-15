@@ -398,11 +398,14 @@ app.post('/api/increment', (req, res) => {
 
   const timestamp = new Date().toLocaleString();
   const id = Date.now().toString();
+  const username = req.username || 'Anonymous';
+  console.log('Increment by user:', username, 'Cookies:', req.cookies);
+
   data.log.unshift({
     id: id,
     timestamp: timestamp,
     count: data.count,
-    username: req.username || 'Anonymous'
+    username: username
   });
 
   // Keep only last 20 entries in log
