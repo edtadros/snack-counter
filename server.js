@@ -119,7 +119,7 @@ app.post('/login', (req, res) => {
 
   res.cookie('username', cleanUsername, {
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    httpOnly: true,
+    httpOnly: false, // Allow JavaScript to read this for display
     secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
   });
 
@@ -270,6 +270,12 @@ app.get('/api/button-state', (req, res) => {
   });
 });
 
+// User info endpoint
+app.get('/api/user-info', (req, res) => {
+  const username = req.username || 'Guest';
+  res.json({ username: username });
+});
+
 // Push notification routes
 app.get('/api/vapid-public-key', (req, res) => {
   res.json({ publicKey: vapidKeys.publicKey });
@@ -277,7 +283,7 @@ app.get('/api/vapid-public-key', (req, res) => {
 
 app.post('/api/subscribe', (req, res) => {
   const subscription = req.body;
-  const data = readData();
+  const data = readData(req.accessCode);
 
   // Remove any existing subscription with the same endpoint
   data.pushSubscriptions = data.pushSubscriptions.filter(sub =>
@@ -297,8 +303,8 @@ app.post('/api/subscribe', (req, res) => {
 });
 
 // Function to send push notifications
-async function sendPushNotifications(message, title = 'Snack Counter') {
-  const data = readData();
+async function sendPushNotifications(accessCode, message, title = 'Snack Counter') {
+  const data = readData(accessCode);
   const payload = JSON.stringify({
     title: title,
     body: message,
@@ -313,7 +319,7 @@ async function sendPushNotifications(message, title = 'Snack Counter') {
       console.error('Error sending push notification:', error);
       // If subscription is invalid, remove it
       if (error.statusCode === 410 || error.statusCode === 400) {
-        removeInvalidSubscription(subscription.endpoint);
+        removeInvalidSubscription(accessCode, subscription.endpoint);
       }
     }
   });
@@ -322,12 +328,12 @@ async function sendPushNotifications(message, title = 'Snack Counter') {
 }
 
 // Remove invalid subscriptions
-function removeInvalidSubscription(endpoint) {
-  const data = readData();
+function removeInvalidSubscription(accessCode, endpoint) {
+  const data = readData(accessCode);
   data.pushSubscriptions = data.pushSubscriptions.filter(sub =>
     sub.endpoint !== endpoint
   );
-  writeData(data);
+  writeData(accessCode, data);
 }
 
 // Data export endpoint for backups
@@ -407,7 +413,7 @@ app.post('/api/increment', (req, res) => {
   writeData(data);
 
   // Send push notifications asynchronously (don't wait for it)
-  sendPushNotifications(`Snack #${data.count} has been eaten! 🐷`, 'Snack Counter')
+  sendPushNotifications(req.accessCode, `Snack #${data.count} has been eaten! 🐷`, 'Snack Counter')
     .catch(error => console.error('Failed to send push notifications:', error));
 
   res.json(data);

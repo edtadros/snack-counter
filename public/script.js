@@ -325,13 +325,30 @@ function initUserDisplay() {
 
     for (let cookie of cookies) {
         const [name, value] = cookie.trim().split('=');
-        if (name === 'username') {
-            username = decodeURIComponent(value);
+        if (name.trim() === 'username') {
+            username = decodeURIComponent(value.trim());
             break;
         }
     }
 
-    currentUserDisplay.textContent = username;
+    // If we still don't have a username, try to get it from the server
+    if (username === 'Guest') {
+        // Make a request to get current user info
+        fetch('/api/user-info', {
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.username && data.username !== 'Anonymous') {
+                currentUserDisplay.textContent = data.username;
+            }
+        })
+        .catch(error => {
+            console.log('Could not get user info from server');
+        });
+    } else {
+        currentUserDisplay.textContent = username;
+    }
 }
 
 // Push notification functions
