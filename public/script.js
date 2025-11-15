@@ -13,6 +13,7 @@ let currentLog = [];
 let isDarkMode = false;
 let buttonEnabled = true;
 let countdownInterval = null;
+let notificationsEnabled = false;
 
 // Initialize the app
 async function init() {
@@ -314,12 +315,91 @@ function initDarkMode() {
     }
 }
 
+// Push notification functions
+async function initPushNotifications() {
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+        try {
+            // Register service worker
+            const registration = await navigator.serviceWorker.register('/sw.js');
+            console.log('Service Worker registered:', registration);
+
+            // Check if already subscribed
+            let subscription = await registration.pushManager.getSubscription();
+
+            if (!subscription) {
+                // Ask user for permission and subscribe
+                await requestNotificationPermission(registration);
+            } else {
+                console.log('Already subscribed to push notifications');
+                notificationsEnabled = true;
+            }
+        } catch (error) {
+            console.error('Service Worker registration failed:', error);
+        }
+    } else {
+        console.log('Push notifications not supported');
+    }
+}
+
+async function requestNotificationPermission(registration) {
+    try {
+        const permission = await Notification.requestPermission();
+
+        if (permission === 'granted') {
+            console.log('Notification permission granted');
+
+            // Get VAPID public key from server
+            const response = await fetch('/api/vapid-public-key');
+            const { publicKey } = await response.json();
+
+            // Subscribe to push notifications
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(publicKey)
+            });
+
+            // Send subscription to server
+            await fetch('/api/subscribe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(subscription)
+            });
+
+            notificationsEnabled = true;
+            console.log('Successfully subscribed to push notifications');
+        } else {
+            console.log('Notification permission denied');
+        }
+    } catch (error) {
+        console.error('Error requesting notification permission:', error);
+    }
+}
+
+// Utility function to convert VAPID key
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+        .replace(/-/g, '+')
+        .replace(/_/g, '/');
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
     init();
     initDarkMode();
     startFlyingPig();
     checkButtonState(); // Check initial button state
+    initPushNotifications(); // Initialize push notifications
 });
 
 // Periodic refresh to sync with other users

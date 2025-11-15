@@ -17,6 +17,7 @@ A fun, mobile-optimized snack counter app with flying pigs and deletion capabili
 - **Rate Limiting**: Global 20-second cooldown prevents spam - button disables for ALL users when pressed
 - **Data Persistence**: Automatic saving to JSON with backup system - survives server restarts and software updates
 - **Access Control**: Password-protected access with cookie-based authentication - only authorized users can access
+- **Push Notifications**: Real-time notifications on iOS Safari when snacks are incremented
 
 ## Recent Updates
 
@@ -98,6 +99,8 @@ Your snack data is automatically saved and will survive:
 
 **Environment Variables:**
 - `ACCESS_PASSWORD`: Set your custom access code
+- `VAPID_PUBLIC_KEY`: Your VAPID public key for push notifications
+- `VAPID_PRIVATE_KEY`: Your VAPID private key for push notifications
 - `NODE_ENV`: Set to `production` for deployment
 
 **Security Features:**
@@ -105,6 +108,27 @@ Your snack data is automatically saved and will survive:
 - Password is never stored in client-side code
 - All routes protected except API endpoints
 - Automatic logout after 24 hours
+
+## Push Notifications
+
+**iOS Safari Support:**
+- Works on iOS 16.4+ Safari
+- Automatic permission request on first visit
+- Notifications appear even when app is closed
+- Tap notification to return to counter
+
+**Setup:**
+1. Generate VAPID keys (see instructions below)
+2. Set `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` in Render environment variables
+3. Users will be prompted to allow notifications on first visit
+
+**VAPID Key Generation:**
+```bash
+npm install -g web-push
+web-push generate-vapid-keys
+```
+
+This generates your public and private VAPID keys needed for push notifications.
 
 ## API Endpoints
 

@@ -1,6 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const webpush = require('web-push');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -8,6 +9,19 @@ const DATA_FILE = path.join(__dirname, 'counter-data.json');
 
 // Simple access control
 const ACCESS_PASSWORD = process.env.ACCESS_PASSWORD || 'snacks2025'; // Change this!
+
+// Web Push Configuration
+const vapidKeys = {
+  publicKey: process.env.VAPID_PUBLIC_KEY || 'BDefault_Public_Key_For_Development',
+  privateKey: process.env.VAPID_PRIVATE_KEY || 'Default_Private_Key_For_Development'
+};
+
+// Set VAPID details
+webpush.setVapidDetails(
+  'mailto:your-email@example.com',
+  vapidKeys.publicKey,
+  vapidKeys.privateKey
+);
 
 // Middleware
 app.use(express.json());
@@ -106,7 +120,8 @@ if (!fs.existsSync(DATA_FILE)) {
   const initialData = {
     count: 0,
     log: [],
-    lastIncrementTime: 0
+    lastIncrementTime: 0,
+    pushSubscriptions: []
   };
   fs.writeFileSync(DATA_FILE, JSON.stringify(initialData, null, 2));
 }
@@ -132,6 +147,7 @@ function readData() {
     if (typeof parsed.count !== 'number') parsed.count = 0;
     if (!Array.isArray(parsed.log)) parsed.log = [];
     if (typeof parsed.lastIncrementTime !== 'number') parsed.lastIncrementTime = 0;
+    if (!Array.isArray(parsed.pushSubscriptions)) parsed.pushSubscriptions = [];
 
     return parsed;
   } catch (error) {
@@ -236,6 +252,66 @@ app.get('/api/button-state', (req, res) => {
   });
 });
 
+// Push notification routes
+app.get('/api/vapid-public-key', (req, res) => {
+  res.json({ publicKey: vapidKeys.publicKey });
+});
+
+app.post('/api/subscribe', (req, res) => {
+  const subscription = req.body;
+  const data = readData();
+
+  // Remove any existing subscription with the same endpoint
+  data.pushSubscriptions = data.pushSubscriptions.filter(sub =>
+    sub.endpoint !== subscription.endpoint
+  );
+
+  // Add the new subscription
+  data.pushSubscriptions.push(subscription);
+
+  // Keep only the last 50 subscriptions to prevent file bloat
+  if (data.pushSubscriptions.length > 50) {
+    data.pushSubscriptions = data.pushSubscriptions.slice(-50);
+  }
+
+  writeData(data);
+  res.status(201).json({ message: 'Subscription added successfully' });
+});
+
+// Function to send push notifications
+async function sendPushNotifications(message, title = 'Snack Counter') {
+  const data = readData();
+  const payload = JSON.stringify({
+    title: title,
+    body: message,
+    icon: '/icon.png',
+    badge: '/badge.png'
+  });
+
+  const promises = data.pushSubscriptions.map(async (subscription) => {
+    try {
+      await webpush.sendNotification(subscription, payload);
+    } catch (error) {
+      console.error('Error sending push notification:', error);
+      // If subscription is invalid, remove it
+      if (error.statusCode === 410 || error.statusCode === 400) {
+        removeInvalidSubscription(subscription.endpoint);
+      }
+    }
+  });
+
+  await Promise.all(promises);
+}
+
+// Remove invalid subscriptions
+function removeInvalidSubscription(endpoint) {
+  const data = readData();
+  data.pushSubscriptions = data.pushSubscriptions.filter(sub =>
+    sub.endpoint !== endpoint
+  );
+  writeData(data);
+}
+
 // Data export endpoint for backups
 app.get('/api/export-data', (req, res) => {
   try {
@@ -310,6 +386,11 @@ app.post('/api/increment', (req, res) => {
   }
 
   writeData(data);
+
+  // Send push notifications asynchronously (don't wait for it)
+  sendPushNotifications(`Snack #${data.count} has been eaten! 🐷`, 'Snack Counter')
+    .catch(error => console.error('Failed to send push notifications:', error));
+
   res.json(data);
 });
 
