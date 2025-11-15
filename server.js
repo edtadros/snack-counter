@@ -501,6 +501,43 @@ app.delete('/api/log/:id', (req, res) => {
   }
 });
 
+// Fix timestamps to Pacific Time (one-time migration endpoint)
+app.post('/api/fix-timestamps', (req, res) => {
+  if (!req.accessCode) {
+    console.error('❌ API /fix-timestamps - No accessCode!');
+    return res.status(400).json({ error: 'No access code provided' });
+  }
+
+  try {
+    const data = readData(req.accessCode);
+    let fixedCount = 0;
+
+    // Convert each log entry's timestamp from UTC to Pacific
+    data.log.forEach(entry => {
+      // The ID is epoch time, use it to regenerate the timestamp in Pacific
+      if (entry.id) {
+        const date = new Date(parseInt(entry.id));
+        entry.timestamp = date.toLocaleString('en-US', { 
+          timeZone: 'America/Los_Angeles'
+        });
+        fixedCount++;
+      }
+    });
+
+    writeData(req.accessCode, data);
+    console.log(`✅ Fixed ${fixedCount} timestamps to Pacific Time for ${req.accessCode}`);
+    
+    res.json({
+      success: true,
+      message: `Fixed ${fixedCount} timestamps to Pacific Time`,
+      data: data
+    });
+  } catch (error) {
+    console.error('Error fixing timestamps:', error);
+    res.status(500).json({ error: 'Failed to fix timestamps' });
+  }
+});
+
 // Graceful shutdown handling
 process.on('SIGINT', () => {
   console.log('\nReceived SIGINT, shutting down gracefully...');
