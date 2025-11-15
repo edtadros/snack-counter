@@ -135,16 +135,7 @@ app.post('/logout', (req, res) => {
 
 app.use(express.static('public'));
 
-// Initialize data file if it doesn't exist
-if (!fs.existsSync(DATA_FILE)) {
-  const initialData = {
-    count: 0,
-    log: [],
-    lastIncrementTime: 0,
-    pushSubscriptions: []
-  };
-  fs.writeFileSync(DATA_FILE, JSON.stringify(initialData, null, 2));
-}
+// Data files are now created on-demand when access codes are first used
 
 // Helper function to read data with integrity checks
 function readData(accessCode) {
