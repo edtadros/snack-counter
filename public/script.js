@@ -177,7 +177,7 @@ function updateDisplay() {
             const logText = document.createElement('span');
             logText.className = 'log-text';
             const username = entry.username || 'Anonymous';
-            logText.textContent = `${entry.timestamp} - ${username} ate Snack #${entry.count}`;
+            logText.textContent = `${entry.timestamp} - ${username} clicked +`;
 
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'delete-btn';
