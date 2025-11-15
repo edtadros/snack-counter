@@ -11,7 +11,7 @@ const currentUserDisplay = document.getElementById('currentUser');
 // State
 let currentCount = 0;
 let currentLog = [];
-let isDarkMode = false;
+let isDarkMode = true; // Start with dark mode as default
 let buttonEnabled = true;
 let countdownInterval = null;
 let notificationsEnabled = false;
@@ -287,11 +287,18 @@ incrementBtn.addEventListener('touchend', (e) => {
     incrementCounter();
 });
 
-// Dark mode toggle
+// Theme toggle (dark mode is default, toggle to light mode)
 function toggleDarkMode() {
     isDarkMode = !isDarkMode;
-    document.body.classList.toggle('dark-mode', isDarkMode);
-    darkModeToggle.textContent = isDarkMode ? '☀️' : '🌙';
+    if (isDarkMode) {
+        document.body.classList.remove('light-mode');
+        document.body.classList.add('dark-mode');
+        darkModeToggle.textContent = '☀️';
+    } else {
+        document.body.classList.remove('dark-mode');
+        document.body.classList.add('light-mode');
+        darkModeToggle.textContent = '🌙';
+    }
     localStorage.setItem('darkMode', isDarkMode);
 }
 
@@ -307,12 +314,21 @@ function logout() {
     }
 }
 
-// Initialize dark mode from localStorage
+// Initialize theme from localStorage (dark mode is default)
 function initDarkMode() {
     const savedDarkMode = localStorage.getItem('darkMode');
-    if (savedDarkMode === 'true') {
+    // If explicitly set to false, use light mode
+    if (savedDarkMode === 'false') {
+        isDarkMode = false;
+        document.body.classList.remove('dark-mode');
+        document.body.classList.add('light-mode');
+        darkModeToggle.textContent = '🌙';
+    } else {
+        // Default to dark mode (savedDarkMode is null, 'true', or any other value)
         isDarkMode = true;
+        // Body already has dark-mode class from HTML, ensure it's set
         document.body.classList.add('dark-mode');
+        document.body.classList.remove('light-mode');
         darkModeToggle.textContent = '☀️';
     }
 }

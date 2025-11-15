@@ -1,5 +1,18 @@
 /* CSS Custom Properties for theming */
 :root {
+    --bg-gradient: linear-gradient(135deg, #2c1810, #1a1a2e);
+    --text-color: #e0e0e0;
+    --log-bg: rgba(30, 30, 30, 0.9);
+    --log-text: #e0e0e0;
+    --delete-btn-bg: #ff6b6b;
+    --delete-btn-hover: #ff9999;
+    --pig-skin: #8b4513;
+    --pig-outline: #654321;
+    --pig-nose: #a0522d;
+    --pig-nose-border: #8b4513;
+}
+
+.light-mode {
     --bg-gradient: linear-gradient(135deg, #ff6b6b, #ffa500);
     --text-color: white;
     --log-bg: rgba(255, 255, 255, 0.9);
@@ -10,15 +23,6 @@
     --pig-outline: #cc6666;
     --pig-nose: #ff6666;
     --pig-nose-border: #cc3333;
-}
-
-.dark-mode {
-    --bg-gradient: linear-gradient(135deg, #2c1810, #1a1a2e);
-    --text-color: #e0e0e0;
-    --log-bg: rgba(30, 30, 30, 0.9);
-    --log-text: #e0e0e0;
-    --delete-btn-bg: #ff6b6b;
-    --delete-btn-hover: #ff9999;
 }
 
 /* Mobile-first responsive design */
