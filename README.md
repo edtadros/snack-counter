@@ -52,13 +52,26 @@ A fun, mobile-optimized snack counter app with flying pigs and deletion capabili
 
 ## Usage
 
+**First Time Setup:**
+1. Visit the app URL
+2. Enter an **Access Code** (e.g., "party2025", "wedding", "birthday")
+3. Enter your **Name** (e.g., "Ed", "Sarah", "Mike")
+4. Click "Enter Counter"
+
+**Daily Use:**
 - Tap the large square "+" button to increment the snack counter
 - Watch the main pig change width based on the current snack count (grows wider with more snacks, shrinks when count decreases)
+- Your name will appear in the snack log when you increment
 - Enjoy the flying pig bouncing around the screen
 - Toggle between light 🌙 and dark ☀️ modes using the button in the top-right
-- View the snack log at the bottom
+- View the snack log at the bottom (shows who ate which snack)
 - Delete any mistaken entries by tapping the red × button next to them
 - **Security**: Log out anytime using the 🚪 button in the top-right
+
+**Sharing with Friends:**
+- Share the same Access Code with friends
+- Everyone with the same code shares the same counter
+- Each person's name appears in the log when they increment
 
 ## Technical Details
 
