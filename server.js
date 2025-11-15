@@ -434,7 +434,9 @@ app.post('/api/increment', (req, res) => {
   data.count += 1;
   data.lastIncrementTime = now;
 
-  const timestamp = new Date().toLocaleString();
+  const timestamp = new Date().toLocaleString('en-US', { 
+    timeZone: 'America/Los_Angeles'
+  });
   const id = Date.now().toString();
   const username = req.username || 'Anonymous';
   console.log('🚀 INCREMENT - accessCode:', req.accessCode, 'user:', username, 'new count:', data.count, 'file:', getDataFile(req.accessCode));
