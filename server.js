@@ -59,21 +59,31 @@ app.use((req, res, next) => {
   // Check for access code in URL parameter or cookie
   let accessCode = req.query.access || (req.cookies && req.cookies.accessCode);
 
+  console.log('Middleware check - Path:', req.path, 'Query access:', req.query.access, 'Cookie accessCode:', req.cookies?.accessCode);
+
   if (accessCode) {
-    // Validate access code (alphanumeric, underscore, dash only)
-    if (/^[a-zA-Z0-9_-]+$/.test(accessCode)) {
-      // Set access code cookie for future requests
-      res.cookie('accessCode', accessCode, {
+    // Sanitize access code for consistency
+    const sanitizedCode = accessCode.replace(/[^a-zA-Z0-9_-]/g, '_');
+    console.log('Original accessCode:', accessCode, 'Sanitized:', sanitizedCode);
+
+    // Validate sanitized access code (alphanumeric, underscore, dash only)
+    if (/^[a-zA-Z0-9_-]+$/.test(sanitizedCode)) {
+      // Set access code cookie for future requests (always set it to ensure consistency)
+      res.cookie('accessCode', sanitizedCode, {
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
         httpOnly: true,
         secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
       });
-      // Store access code and username on request for use in routes
-      req.accessCode = accessCode;
-      req.username = req.cookies && req.cookies.username ? req.cookies.username : 'Anonymous';
-      console.log('Middleware: accessCode:', accessCode, 'username:', req.username, 'all cookies:', req.cookies);
+      // Store sanitized access code on request for use in routes
+      req.accessCode = sanitizedCode;
+      req.username = req.cookies && req.cookies.username ? decodeURIComponent(req.cookies.username) : 'Anonymous';
+      console.log('✅ Middleware: accessCode set to:', req.accessCode, 'username:', req.username);
       return next();
+    } else {
+      console.log('❌ Invalid access code format:', sanitizedCode);
     }
+  } else {
+    console.log('❌ No access code found in query or cookie');
   }
 
   // If accessing root, show login page
@@ -253,6 +263,7 @@ function writeData(accessCode, data) {
 
 // API Routes
 app.get('/api/counter', (req, res) => {
+  console.log('API /counter - accessCode:', req.accessCode);
   const data = readData(req.accessCode);
   res.json(data);
 });
@@ -402,7 +413,7 @@ app.post('/api/increment', (req, res) => {
   const timestamp = new Date().toLocaleString();
   const id = Date.now().toString();
   const username = req.username || 'Anonymous';
-  console.log('Increment by user:', username, 'Cookies:', req.cookies);
+  console.log('🚀 INCREMENT - accessCode:', req.accessCode, 'user:', username, 'new count:', data.count, 'file:', getDataFile(req.accessCode));
 
   data.log.unshift({
     id: id,

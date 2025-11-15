@@ -29,7 +29,7 @@ async function init() {
 // Load counter data from server
 async function loadCounterData() {
     try {
-        const response = await fetch('/api/counter');
+        const response = await fetch('/api/counter', { credentials: 'same-origin' });
         const data = await response.json();
         currentCount = data.count;
         currentLog = data.log;
@@ -48,7 +48,7 @@ async function loadCounterData() {
 // Check button state from server
 async function checkButtonState() {
     try {
-        const response = await fetch('/api/button-state');
+        const response = await fetch('/api/button-state', { credentials: 'same-origin' });
         const data = await response.json();
         updateButtonState(data.isEnabled, data.remainingTime);
     } catch (error) {
@@ -119,7 +119,8 @@ async function incrementCounter() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
+            credentials: 'same-origin'
         });
 
         if (response.ok) {
@@ -195,7 +196,8 @@ function updateDisplay() {
 async function deleteLogEntry(logId) {
     try {
         const response = await fetch(`/api/log/${logId}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            credentials: 'same-origin'
         });
 
         if (response.ok) {
@@ -351,6 +353,7 @@ function initUserDisplay() {
     if (username === 'Guest') {
         // Make a request to get current user info
         fetch('/api/user-info', {
+            method: 'GET',
             credentials: 'same-origin'
         })
         .then(response => response.json())
@@ -401,7 +404,7 @@ async function requestNotificationPermission(registration) {
             console.log('Notification permission granted');
 
             // Get VAPID public key from server
-            const response = await fetch('/api/vapid-public-key');
+            const response = await fetch('/api/vapid-public-key', { credentials: 'same-origin' });
             const { publicKey } = await response.json();
 
             // Subscribe to push notifications
